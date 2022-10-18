@@ -17,7 +17,7 @@ import Control.Applicative (Alternative((<|>)))
 
 type SomeWord = IntSet
 
-findThings :: IntSet -> IntMap [SomeWord] -> [[IntSet]]
+findThings :: IntSet -> IntMap (Set.Set SomeWord) -> [[IntSet]]
 findThings usedLetters remaining | IntSet.size usedLetters >= 5*5 = pure []
 findThings usedLetters remaining = do
     let relevantParts = IntMap.filterWithKey (\k v -> k `IntSet.notMember` usedLetters) remaining
@@ -32,7 +32,7 @@ findThings usedLetters remaining = do
             -- traceM $ "skipping " ++ show k
             Just (secondUnused, otherUnused') <- pure $ IntMap.minView otherUnused
             pure (IntSet.insert k usedLetters, secondUnused)
-    attempt <- firstOrSecondUnused
+    attempt <- Set.toList firstOrSecondUnused
     guard $ IntSet.disjoint attempt usedLetters'
 
     -- when (IntSet.size usedLetters' `mod` 5 /= 0) $ traceM $ show (usedLetters', aStr)
@@ -64,8 +64,8 @@ main = do
             | w <- words , length w == 5
             , let ws = IntSet.fromList (map charToInt w) , IntSet.size ws == 5
             ]
-    let words5Map = IntMap.fromListWith (++)
-            [ (leastCommonLetter, pure ws)
+    let words5Map = IntMap.fromListWith Set.union
+            [ (leastCommonLetter, Set.singleton ws)
             | (ws, w) <- words5
             , let Just (leastCommonLetter, _) = IntSet.minView ws]
     let reverseMap = Map.fromListWith (++) $ fmap (fmap pure) words5
