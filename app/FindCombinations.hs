@@ -43,10 +43,10 @@ main = do
     words <- fmap init . lines <$> readFile "words_alpha.txt"
     let words5 =
             [ (ws, w)
-            | w <- words , length w == 5
-            , let ws = BitMask.fromList (map charToInt w) , BitMask.size ws == 5
+            | w <- words , length w == 5 -- All words of length 5
+            , let ws = BitMask.fromList (map charToInt w) , BitMask.size ws == 5 -- with five unique characters
             ]
-    let words5Map = IntMap.toList $ IntMap.fromListWith IntSet.union
+    let words5Map = IntMap.toList $ IntMap.fromListWith IntSet.union -- a map from least common letter to set of words
             [ (leastCommonLetter, IntSet.singleton $ BitMask.unBM ws)
             | (ws, w) <- words5
             , let Just leastCommonLetter = BitMask.minimum ws]
