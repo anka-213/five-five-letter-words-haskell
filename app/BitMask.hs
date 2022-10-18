@@ -6,7 +6,7 @@ import Utils.Containers.Internal.BitUtil
 
 
 -- | A simpler IntSet for numbers less than 32
-newtype Bitmask32 = BM {unBM :: Word32}
+newtype Bitmask32 = BM {unBM :: Int}
   deriving (Eq, Ord)
 
 empty :: Bitmask32
@@ -30,7 +30,7 @@ minimum :: Bitmask32 -> Maybe Int
 minimum = adjustThing . countTrailingZeros . unBM
 
 adjustThing :: Int -> Maybe Int
-adjustThing 32 = Nothing
+adjustThing 64 = Nothing
 adjustThing n = Just n
 
 notMember :: IntMap.Key -> Bitmask32 -> Bool
