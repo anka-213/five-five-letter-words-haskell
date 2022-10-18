@@ -16,16 +16,18 @@ import GHC.Char (chr)
 import Control.Applicative (Alternative((<|>)))
 import qualified BitMask
 import BitMask (Bitmask32)
+import Data.List (uncons)
 
-findThings :: Bitmask32 -> IntMap [Bitmask32] -> [[Bitmask32]]
+findThings :: Bitmask32 -> [(Int,[Bitmask32])] -> [[Bitmask32]]
 findThings usedLetters remaining | BitMask.size usedLetters >= 5*5 = pure []
 findThings usedLetters remaining = do
-    let relevantParts = IntMap.filterWithKey (\k v -> k `BitMask.notMember` usedLetters) remaining
-    Just ((k, firstUnused), otherUnused) <- pure $ IntMap.minViewWithKey relevantParts
+    let getRelevantParts = dropWhile (\k -> fst k `BitMask.member` usedLetters)
+    let relevantParts = getRelevantParts remaining
+    Just ((k, firstUnused), otherUnused) <- pure $ uncons relevantParts
     (usedLetters', firstOrSecondUnused) <-
         pure (usedLetters, firstUnused) <|> do
             guard $ BitMask.size usedLetters `mod` 5 == 0 -- If we haven't skipped any letters so far
-            Just (secondUnused, otherUnused') <- pure $ IntMap.minView otherUnused
+            Just ((_, secondUnused), otherUnused') <- pure $ uncons $ getRelevantParts otherUnused
             pure (BitMask.insert k usedLetters, secondUnused)
     attempt <- firstOrSecondUnused
     guard $ BitMask.disjoint attempt usedLetters'
@@ -49,7 +51,7 @@ main = do
             | w <- words , length w == 5
             , let ws = BitMask.fromList (map charToInt w) , BitMask.size ws == 5
             ]
-    let words5Map = Set.toList <$> IntMap.fromListWith Set.union
+    let words5Map = IntMap.toList $ Set.toList <$> IntMap.fromListWith Set.union
             [ (leastCommonLetter, Set.singleton ws)
             | (ws, w) <- words5
             , let Just leastCommonLetter = BitMask.minimum ws]

@@ -34,7 +34,10 @@ adjustThing 32 = Nothing
 adjustThing n = Just n
 
 notMember :: IntMap.Key -> Bitmask32 -> Bool
-notMember k (BM b) = not $ testBit b k
+notMember k = not . member k
+
+member :: IntMap.Key -> Bitmask32 -> Bool
+member k (BM b) = testBit b k
 
 size :: Bitmask32 -> Int
 size = popCount . unBM
