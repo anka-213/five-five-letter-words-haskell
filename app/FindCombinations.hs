@@ -17,6 +17,7 @@ import Control.Applicative (Alternative((<|>)))
 import qualified BitMask
 import BitMask (Bitmask32)
 import Data.List (uncons)
+-- import Data.IntSet (showTree)
 
 findThings :: Bitmask32 -> [(Int,IntSet)] -> [[Bitmask32]]
 findThings usedLetters remaining | BitMask.size usedLetters >= 5*5 = pure []
@@ -56,6 +57,7 @@ main = do
             | (ws, w) <- words5
             , let Just leastCommonLetter = BitMask.minimum ws]
     let reverseMap = Map.fromListWith (++) $ fmap (fmap pure) words5
+    -- mapM_ (putStrLn . take 1000 . showTree . snd) $ take 10 words5Map
     let result = traverse (reverseMap Map.!) =<< findThings BitMask.empty words5Map
     mapM_ print result
     print $ length result
