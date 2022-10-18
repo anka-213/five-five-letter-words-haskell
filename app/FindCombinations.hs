@@ -1,6 +1,9 @@
+-- {-# LANGUAGE Strict #-}
+-- {-# OPTIONS_GHC -O1 #-}
 module Main where
 
 import qualified Data.IntSet as IntSet
+import qualified Data.Set as Set
 import Data.IntSet (IntSet)
 import Debug.Trace (traceM, traceShowId)
 import Control.Monad (when, guard)
@@ -13,14 +16,14 @@ import GHC.Char (chr)
 type SomeWord = (IntSet, String)
 
 findThings :: IntSet -> IntMap [SomeWord] -> [[String]]
-findThings soFar remaining | IntSet.size soFar >= 5*5 = [[]]
+findThings soFar remaining | IntSet.size soFar >= 5*5 = pure []
 findThings soFar remaining = do
     let relevantParts = IntMap.filterWithKey (\k v -> k `IntSet.notMember` soFar) remaining
     -- when (IntSet.size soFar >= 5*4) $ do
     --     traceM $ show soFar
     --     mapM_ (traceM . take 200 . show) $ IntMap.toList relevantParts
     --     traceM (relevantParts `seq` "")
-    Just (firstUnused, otherUnused) <- [IntMap.minView relevantParts]
+    Just (firstUnused, otherUnused) <- pure $ IntMap.minView relevantParts
     (attempt, aStr) <- firstUnused
     guard $ IntSet.disjoint attempt soFar
     -- when (IntSet.size soFar >= 5*3) $
@@ -33,6 +36,7 @@ charToInt c
     | Just n <- IntMap.lookup (fromEnum c) reverseLetterFrequency = n
     | otherwise = error $ "invalid char:" ++ show c
 -- charToInt = (reverseLetterFrequency IntMap.!) . fromEnum
+-- charToInt = fromEnum
 
 reverseLetterFrequency :: IntMap Int
 reverseLetterFrequency = IntMap.fromList $ zip (fmap ord "qxjzvfwbkgpmhdcytlnuroisea") [0..]
@@ -58,3 +62,13 @@ main = do
 -- >>> let words5 = filter ((==5) . length) $ map IntSet.fromList words
 -- >>> take 10 words5
 -- [fromList "aghin",fromList "adkrv",fromList "abdeh",fromList "abcet",fromList "abcix",fromList "abcis",fromList "abcil",fromList "abcot",fromList "abcsu",fromList "abdno"]
+
+
+-- >>> length $ Set.toList $ Set.fromList $ concat ["whamp","bucks","fldxt","vejoz","ringy"]
+-- 25
+
+-- >>> length $ Set.toList $ Set.fromList $ concat ["quawk","fldxt","vejoz","brigs","nymph"]
+-- 25
+
+-- >>> length $ Set.toList $ Set.fromList $ ['a'..'z']
+-- 26
