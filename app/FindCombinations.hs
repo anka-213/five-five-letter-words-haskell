@@ -4,6 +4,7 @@ import qualified Data.IntSet as IntSet
 import Data.IntSet (IntSet)
 import Debug.Trace (traceM)
 import Control.Monad (when)
+import System.Environment (getArgs)
 
 type SomeWord = (IntSet, String)
 
@@ -23,8 +24,9 @@ charToInt = fromEnum
 
 main :: IO ()
 main = do
-    
-    words <- take 40000 . fmap init . lines <$> readFile "words_alpha.txt"
+    [nr] <- fmap read <$> getArgs
+    words <- take nr . fmap init . lines <$> readFile "words_alpha.txt"
+    -- words <- take 40000 . fmap init . lines <$> readFile "words_alpha.txt"
     -- let words5 = filter ((==5) . length . fst) $ [(IntSet.fromList w, w) | w <- words]
     let words5 = [(ws, w)
                  | w <- words , length w == 5
