@@ -23,6 +23,7 @@ findThings :: Bitmask32 -> [(Int,IntSet)] -> [[Bitmask32]]
 findThings usedLetters remaining | BitMask.size usedLetters >= 5*5 = pure []
 findThings usedLetters remaining = do
     let getRelevantParts = dropWhile (\k -> fst k `BitMask.member` usedLetters)
+    -- let relevantParts = fmap (BitMask.restrictIntSet usedLetters) <$> getRelevantParts remaining
     let relevantParts = getRelevantParts remaining
     Just ((k, firstUnused), otherUnused) <- pure $ uncons relevantParts
     (usedLetters', firstOrSecondUnused) <-
