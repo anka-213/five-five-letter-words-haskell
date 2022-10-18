@@ -1,5 +1,5 @@
 -- {-# LANGUAGE Strict #-}
--- {-# OPTIONS_GHC -O1 #-}
+{-# OPTIONS_GHC -O1 #-}
 module Main where
 
 import qualified Data.IntSet as IntSet
@@ -17,27 +17,27 @@ import Control.Applicative (Alternative((<|>)))
 type SomeWord = (IntSet, String)
 
 findThings :: IntSet -> IntMap [SomeWord] -> [[String]]
-findThings soFar remaining | IntSet.size soFar >= 5*5 = pure []
-findThings soFar remaining = do
-    let relevantParts = IntMap.filterWithKey (\k v -> k `IntSet.notMember` soFar) remaining
-    -- when (IntSet.size soFar >= 5*4) $ do
-    --     traceM $ show soFar
+findThings usedLetters remaining | IntSet.size usedLetters >= 5*5 = pure []
+findThings usedLetters remaining = do
+    let relevantParts = IntMap.filterWithKey (\k v -> k `IntSet.notMember` usedLetters) remaining
+    -- when (IntSet.size usedLetters >= 5*4) $ do
+    --     traceM $ show usedLetters
     --     mapM_ (traceM . take 200 . show) $ IntMap.toList relevantParts
     --     traceM (relevantParts `seq` "")
     Just ((k, firstUnused), otherUnused) <- pure $ IntMap.minViewWithKey relevantParts
-    (soFar', firstOrSecondUnused) <-
-        pure (soFar, firstUnused) <|> do
-            guard $ IntSet.size soFar `mod` 5 == 0 -- If we haven't skipped any letters so far
+    (usedLetters', firstOrSecondUnused) <-
+        pure (usedLetters, firstUnused) <|> do
+            guard $ IntSet.size usedLetters `mod` 5 == 0 -- If we haven't skipped any letters so far
             -- traceM $ "skipping " ++ show k
             Just (secondUnused, otherUnused') <- pure $ IntMap.minView otherUnused
-            pure (IntSet.insert k soFar, secondUnused)
+            pure (IntSet.insert k usedLetters, secondUnused)
     (attempt, aStr) <- firstOrSecondUnused
-    guard $ IntSet.disjoint attempt soFar'
+    guard $ IntSet.disjoint attempt usedLetters'
 
-    -- when (IntSet.size soFar' `mod` 5 /= 0) $ traceM $ show (soFar', aStr)
-    -- when (IntSet.size soFar >= 5*3) $
-    --   traceM $ show (soFar, aStr)
-    rest <- findThings (IntSet.union attempt soFar') otherUnused -- Should only use later than attempt
+    -- when (IntSet.size usedLetters' `mod` 5 /= 0) $ traceM $ show (usedLetters', aStr)
+    -- when (IntSet.size usedLetters >= 5*3) $
+    --   traceM $ show (usedLetters, aStr)
+    rest <- findThings (IntSet.union attempt usedLetters') otherUnused -- Should only use later than attempt
     return $ aStr : rest
 
 charToInt :: Char -> Int
@@ -58,10 +58,11 @@ main = do
     words <- fmap init . lines <$> readFile "words_alpha.txt"
     -- words <- take 40000 . fmap init . lines <$> readFile "words_alpha.txt"
     -- let words5 = filter ((==5) . length . fst) $ [(IntSet.fromList w, w) | w <- words]
-    let words5 = IntMap.fromListWith (++) [(leastCommonLetter, [(ws, w)])
-                 | w <- words , length w == 5
-                 , let ws = IntSet.fromList (map charToInt w) , IntSet.size ws == 5
-                 , let Just (leastCommonLetter, _) = IntSet.minView ws]
+    let words5 = IntMap.fromListWith (++)
+            [ (leastCommonLetter, [(ws, w)])
+            | w <- words , length w == 5
+            , let ws = IntSet.fromList (map charToInt w) , IntSet.size ws == 5
+            , let Just (leastCommonLetter, _) = IntSet.minView ws]
     let result = findThings IntSet.empty words5
     mapM_ print result
     print $ length result
