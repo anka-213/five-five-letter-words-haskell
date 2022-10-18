@@ -1,0 +1,8 @@
+packages: .
+
+allow-newer: *
+
+-- source-repository-package
+--     type: git
+--     location: https://github.com/roelvandijk/complexity.git
+--     tag: 3534d3ec0db8f35e9a080e7572193b9b808bd6b4

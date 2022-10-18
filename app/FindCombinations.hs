@@ -8,7 +8,7 @@ import Control.Monad (when)
 type SomeWord = (IntSet, String)
 
 findThings :: IntSet -> [SomeWord] -> [[String]]
-findThings soFar remaining | IntSet.size soFar >= 5*4 = [[]]
+findThings soFar remaining | IntSet.size soFar >= 5*5 = [[]]
 findThings soFar remaining = do
     let nonOverlapping = filter (IntSet.disjoint soFar . fst) remaining
     (attempt, aStr) <- nonOverlapping
@@ -23,14 +23,15 @@ charToInt = fromEnum
 
 main :: IO ()
 main = do
-    words <- fmap init . lines <$> readFile "words_alpha.txt"
+    
+    words <- take 40000 . fmap init . lines <$> readFile "words_alpha.txt"
     -- let words5 = filter ((==5) . length . fst) $ [(IntSet.fromList w, w) | w <- words]
     let words5 = [(ws, w)
                  | w <- words , length w == 5
                  , let ws = IntSet.fromList (map charToInt w) , IntSet.size ws == 5 ]
     let result = findThings IntSet.empty words5
-    -- mapM_ print result
-    print $ last $ take 1000000 result
+    mapM_ print result
+    -- print $ last $ take 1000000 result
 
     -- print $ take 10 words5
 
