@@ -1,5 +1,3 @@
--- {-# LANGUAGE Strict #-}
-{-# OPTIONS_GHC -O1 -Wall #-}
 module Main where
 
 import qualified Data.IntSet as IntSet
@@ -40,15 +38,15 @@ reverseLetterFrequency = IntMap.fromList $ zip (fmap ord "qxjzvfwbkgpmhdcytlnuro
 
 main :: IO ()
 main = do
-    words <- fmap init . lines <$> readFile "words_alpha.txt"
+    wordList <- fmap init . lines <$> readFile "words_alpha.txt"
     let words5 =
             [ (ws, w)
-            | w <- words , length w == 5 -- All words of length 5
+            | w <- wordList , length w == 5 -- All words of length 5
             , let ws = BitMask.fromList (map charToInt w) , BitMask.size ws == 5 -- with five unique characters
             ]
     let words5Map = IntMap.toList $ IntMap.fromListWith IntSet.union -- a map from least common letter to set of words
             [ (leastCommonLetter, IntSet.singleton $ BitMask.unBM ws)
-            | (ws, w) <- words5
+            | (ws, _w) <- words5
             , let Just leastCommonLetter = BitMask.minimum ws]
     let reverseMap = Map.fromListWith (++) $ fmap (fmap pure) words5
     let result = traverse (reverseMap Map.!) =<< findThings BitMask.empty words5Map

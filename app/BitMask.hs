@@ -1,8 +1,6 @@
 module BitMask where
-import Data.Word (Word32)
 import qualified Data.IntMap.Strict as IntMap
 import Data.Bits
-import Utils.Containers.Internal.BitUtil
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.IntSet.Internal as IntSet.Internal
@@ -18,7 +16,7 @@ empty :: Bitmask32
 empty = BM 0
 
 insert :: IntMap.Key -> Bitmask32 -> Bitmask32
-insert k (BM m) | k >= 32 || k < 0 = error $ "BitMask.insert: out of range: " ++ show k
+insert k (BM _m) | k >= 32 || k < 0 = error $ "BitMask.insert: out of range: " ++ show k
 insert k (BM m) = BM $ setBit m k
 
 fromList :: [Int] -> Bitmask32
@@ -52,8 +50,6 @@ union (BM a) (BM b) = BM (a .|. b)
 
 fromIntSet :: IntSet -> [Bitmask32]
 fromIntSet = coerce IntSet.toList
-
--- showTree
 
 bin :: IntSet.Internal.Prefix -> IntSet.Internal.Mask -> IntSet -> IntSet -> IntSet
 bin _ _ l Nil = l
