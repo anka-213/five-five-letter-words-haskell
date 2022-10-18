@@ -3,6 +3,9 @@ import Data.Word (Word32)
 import qualified Data.IntMap.Strict as IntMap
 import Data.Bits
 import Utils.Containers.Internal.BitUtil
+import Data.IntSet (IntSet)
+import qualified Data.IntSet as IntSet
+import Data.Coerce (coerce)
 
 
 -- | A simpler IntSet for numbers less than 32
@@ -45,3 +48,5 @@ size = popCount . unBM
 union :: Bitmask32 -> Bitmask32 -> Bitmask32
 union (BM a) (BM b) = BM (a .|. b)
 
+fromIntSet :: IntSet -> [Bitmask32]
+fromIntSet = coerce IntSet.toList

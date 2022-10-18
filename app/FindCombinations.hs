@@ -18,7 +18,7 @@ import qualified BitMask
 import BitMask (Bitmask32)
 import Data.List (uncons)
 
-findThings :: Bitmask32 -> [(Int,[Bitmask32])] -> [[Bitmask32]]
+findThings :: Bitmask32 -> [(Int,IntSet)] -> [[Bitmask32]]
 findThings usedLetters remaining | BitMask.size usedLetters >= 5*5 = pure []
 findThings usedLetters remaining = do
     let getRelevantParts = dropWhile (\k -> fst k `BitMask.member` usedLetters)
@@ -29,7 +29,7 @@ findThings usedLetters remaining = do
             guard $ BitMask.size usedLetters `mod` 5 == 0 -- If we haven't skipped any letters so far
             Just ((_, secondUnused), otherUnused') <- pure $ uncons $ getRelevantParts otherUnused
             pure (BitMask.insert k usedLetters, secondUnused)
-    attempt <- firstOrSecondUnused
+    attempt <- BitMask.fromIntSet firstOrSecondUnused
     guard $ BitMask.disjoint attempt usedLetters'
 
     rest <- findThings (BitMask.union attempt usedLetters') otherUnused -- Should only use later than attempt
@@ -51,8 +51,8 @@ main = do
             | w <- words , length w == 5
             , let ws = BitMask.fromList (map charToInt w) , BitMask.size ws == 5
             ]
-    let words5Map = IntMap.toList $ Set.toList <$> IntMap.fromListWith Set.union
-            [ (leastCommonLetter, Set.singleton ws)
+    let words5Map = IntMap.toList $ IntMap.fromListWith IntSet.union
+            [ (leastCommonLetter, IntSet.singleton $ BitMask.unBM ws)
             | (ws, w) <- words5
             , let Just leastCommonLetter = BitMask.minimum ws]
     let reverseMap = Map.fromListWith (++) $ fmap (fmap pure) words5
