@@ -4,6 +4,7 @@ module Main where
 
 import qualified Data.IntSet as IntSet
 import qualified Data.Set as Set
+import qualified Data.Map.Strict as Map
 import Data.IntSet (IntSet)
 import Debug.Trace (traceM, traceShowId)
 import Control.Monad (when, guard)
@@ -14,9 +15,9 @@ import Data.Char (ord, toLower)
 import GHC.Char (chr)
 import Control.Applicative (Alternative((<|>)))
 
-type SomeWord = (IntSet, String)
+type SomeWord = IntSet
 
-findThings :: IntSet -> IntMap [SomeWord] -> [[String]]
+findThings :: IntSet -> IntMap [SomeWord] -> [[IntSet]]
 findThings usedLetters remaining | IntSet.size usedLetters >= 5*5 = pure []
 findThings usedLetters remaining = do
     let relevantParts = IntMap.filterWithKey (\k v -> k `IntSet.notMember` usedLetters) remaining
@@ -31,14 +32,14 @@ findThings usedLetters remaining = do
             -- traceM $ "skipping " ++ show k
             Just (secondUnused, otherUnused') <- pure $ IntMap.minView otherUnused
             pure (IntSet.insert k usedLetters, secondUnused)
-    (attempt, aStr) <- firstOrSecondUnused
+    attempt <- firstOrSecondUnused
     guard $ IntSet.disjoint attempt usedLetters'
 
     -- when (IntSet.size usedLetters' `mod` 5 /= 0) $ traceM $ show (usedLetters', aStr)
     -- when (IntSet.size usedLetters >= 5*3) $
     --   traceM $ show (usedLetters, aStr)
     rest <- findThings (IntSet.union attempt usedLetters') otherUnused -- Should only use later than attempt
-    return $ aStr : rest
+    return $ attempt : rest
 
 charToInt :: Char -> Int
 charToInt c
@@ -58,12 +59,17 @@ main = do
     words <- fmap init . lines <$> readFile "words_alpha.txt"
     -- words <- take 40000 . fmap init . lines <$> readFile "words_alpha.txt"
     -- let words5 = filter ((==5) . length . fst) $ [(IntSet.fromList w, w) | w <- words]
-    let words5 = IntMap.fromListWith (++)
-            [ (leastCommonLetter, [(ws, w)])
+    let words5 =
+            [ (ws, w)
             | w <- words , length w == 5
             , let ws = IntSet.fromList (map charToInt w) , IntSet.size ws == 5
+            ]
+    let words5Map = IntMap.fromListWith (++)
+            [ (leastCommonLetter, pure ws)
+            | (ws, w) <- words5
             , let Just (leastCommonLetter, _) = IntSet.minView ws]
-    let result = findThings IntSet.empty words5
+    let reverseMap = Map.fromListWith (++) $ fmap (fmap pure) words5
+    let result = traverse (reverseMap Map.!) =<< findThings IntSet.empty words5Map
     mapM_ print result
     print $ length result
     -- print $ last $ take 1000000 result
