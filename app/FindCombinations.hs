@@ -14,10 +14,16 @@ import Data.IntMap (IntMap)
 import Data.Char (ord, toLower)
 import GHC.Char (chr)
 import Control.Applicative (Alternative((<|>)))
+import Control.Monad.Logic (Logic)
+import Data.Foldable (asum)
+import qualified Control.Monad.Logic as Logic
 
 type SomeWord = IntSet
 
-findThings :: IntSet -> IntMap ([] SomeWord) -> [[IntSet]]
+logicFromList :: [a] -> Logic a
+logicFromList xs = Logic.LogicT $ \cons nil -> foldr cons nil xs
+
+findThings :: IntSet -> IntMap [SomeWord] -> Logic [IntSet]
 findThings usedLetters remaining | IntSet.size usedLetters >= 5*5 = pure []
 findThings usedLetters remaining = do
     let relevantParts = IntMap.filterWithKey (\k v -> k `IntSet.notMember` usedLetters) remaining
@@ -27,7 +33,7 @@ findThings usedLetters remaining = do
             guard $ IntSet.size usedLetters `mod` 5 == 0 -- If we haven't skipped any letters so far
             Just (secondUnused, otherUnused') <- pure $ IntMap.minView otherUnused
             pure (IntSet.insert k usedLetters, secondUnused)
-    attempt <- firstOrSecondUnused
+    attempt <- logicFromList firstOrSecondUnused
     guard $ IntSet.disjoint attempt usedLetters'
 
     rest <- findThings (IntSet.union attempt usedLetters') otherUnused -- Should only use later than attempt
@@ -54,6 +60,6 @@ main = do
             | (ws, w) <- words5
             , let Just (leastCommonLetter, _) = IntSet.minView ws]
     let reverseMap = Map.fromListWith (++) $ fmap (fmap pure) words5
-    let result = traverse (reverseMap Map.!) =<< findThings IntSet.empty words5Map
+    let result = traverse (logicFromList . (reverseMap Map.!)) =<< findThings IntSet.empty words5Map
     mapM_ print result
     print $ length result
