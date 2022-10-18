@@ -30,8 +30,8 @@ findThings usedLetters remaining = do
             guard $ BitMask.size usedLetters `mod` 5 == 0 -- If we haven't skipped any letters so far
             Just ((_, secondUnused), otherUnused') <- pure $ uncons $ getRelevantParts otherUnused
             pure (BitMask.insert k usedLetters, secondUnused)
-    attempt <- BitMask.fromIntSet firstOrSecondUnused
-    guard $ BitMask.disjoint attempt usedLetters'
+    attempt <- BitMask.fromIntSet $ BitMask.restrictIntSet usedLetters' firstOrSecondUnused
+    -- guard $ BitMask.disjoint attempt usedLetters'
 
     rest <- findThings (BitMask.union attempt usedLetters') otherUnused -- Should only use later than attempt
     return $ attempt : rest
