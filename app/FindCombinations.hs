@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fprof-auto-calls #-}
 module Main where
 
 import qualified Data.IntSet as IntSet
@@ -11,6 +12,8 @@ import Control.Applicative (Alternative((<|>)))
 import qualified BitMask
 import BitMask (Bitmask32)
 import Data.List (uncons)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
 
 findThings :: Bitmask32 -> [(Int,IntSet)] -> [[Bitmask32]]
 findThings usedLetters _remaining | BitMask.size usedLetters >= 5*5 = pure []
@@ -38,11 +41,11 @@ reverseLetterFrequency = IntMap.fromList $ zip (fmap ord "qxjzvfwbkgpmhdcytlnuro
 
 main :: IO ()
 main = do
-    wordList <- fmap init . lines <$> readFile "words_alpha.txt"
+    wordList <- fmap BS8.strip . BS8.lines <$> BS.readFile "words_alpha.txt"
     let words5 =
             [ (ws, w)
-            | w <- wordList , length w == 5 -- All words of length 5
-            , let ws = BitMask.fromList (map charToInt w) , BitMask.size ws == 5 -- with five unique characters
+            | w <- wordList , BS.length w == 5 -- All words of length 5
+            , let ws = BitMask.fromList (map charToInt $ BS8.unpack w) , BitMask.size ws == 5 -- with five unique characters
             ]
     let words5Map = IntMap.toList $ IntMap.fromListWith IntSet.union -- a map from least common letter to set of words
             [ (leastCommonLetter, IntSet.singleton $ BitMask.unBM ws)
